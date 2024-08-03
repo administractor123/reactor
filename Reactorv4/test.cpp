@@ -1,34 +1,55 @@
 #include "Acceptor.h"
 #include "EventLoop.h"
 #include "TcpServer.h"
+#include "ThreadPool.h"
+#include "TcpConnection.h"
 #include <iostream>
 #include <unistd.h>
 
-void test01()
+ThreadPool *gPool = nullptr;
+
+class MyTask
 {
-    Acceptor acc("127.0.0.1", 8888);
-    acc.ready();
+private:
+    std::string _msg;
+    std::shared_ptr<TcpConnection> _con;
 
-    TcpConnection con(acc.accept());
+public:
+    MyTask(const std::string& msg, const std::shared_ptr<TcpConnection>& con)
+    :_msg(msg), _con(con)
+    {}
 
-    std::cout<< con.toString() <<std::endl;
-
-    while (1)
+    void process()
     {
-        std::cout<< ">> recv msg from client: " << con.receive()
-        << std::endl;
-        con.send("hello from sever!!!");
+        _con->sendInLoop(_msg);
     }
-}
+};
 
-void test02()
-{
-    Acceptor acc("127.0.0.1", 8888);
-    acc.ready();
+// void test01()
+// {
+//     Acceptor acc("127.0.0.1", 8888);
+//     acc.ready();
 
-    EventLoop el(acc);
-    el.loop();
-}
+//     TcpConnection con(acc.accept());
+
+//     std::cout<< con.toString() <<std::endl;
+
+//     while (1)
+//     {
+//         std::cout<< ">> recv msg from client: " << con.receive()
+//         << std::endl;
+//         con.send("hello from sever!!!");
+//     }
+// }
+
+// void test02()
+// {
+//     Acceptor acc("127.0.0.1", 8888);
+//     acc.ready();
+
+//     EventLoop el(acc);
+//     el.loop();
+// }
 
 void onNewConnection(const std::shared_ptr<TcpConnection>& con)
 {
@@ -40,7 +61,8 @@ void onMessage(const std::shared_ptr<TcpConnection>& con)
     std::string msg = con->receive();
     std::cout<< ">>recv msg from client: " << msg <<std::endl;
 
-    con->send(msg);
+    MyTask task(msg, con);
+    gPool->addTask(std::bind(&MyTask::process, task));
 }
 
 void onClose(const std::shared_ptr<TcpConnection>& con)
@@ -48,24 +70,30 @@ void onClose(const std::shared_ptr<TcpConnection>& con)
     std::cout<< con->toString() << " has closed" <<std::endl;
 }
 
-void test03()
-{
-    Acceptor acp("127.0.0.1", 8888);
-    acp.ready();
+// void test03()
+// {
+//     Acceptor acp("127.0.0.1", 8888);
+//     acp.ready();
 
-    EventLoop evloop(acp);
-    evloop.setNewConnectionCallback(std::move(onNewConnection));
-    evloop.setMessageCallback(std::move(onMessage));
-    evloop.setCloseCallback(std::move(onClose));
-    evloop.loop();
-}
+//     EventLoop evloop(acp);
+//     evloop.setNewConnectionCallback(std::move(onNewConnection));
+//     evloop.setMessageCallback(std::move(onMessage));
+//     evloop.setCloseCallback(std::move(onClose));
+//     evloop.loop();
+// }
+
 
 void test04()
 {
-    TcpSever tcp("127.0.0.1", 8888);
+    ThreadPool pool(4, 10);
+    pool.start();
+    gPool = &pool;
+
+    TcpServer tcp("127.0.0.1", 8000);
     tcp.setAllCallback(std::move(onNewConnection)
                        , std::move(onMessage)
                        , std::move(onClose));
+
     tcp.start();
 }
 

@@ -11,7 +11,7 @@ ThreadPool::ThreadPool(size_t tNums, size_t qSize)
 
 void ThreadPool::start()
 {
-    for (size_t i = 0; i < _threadNums; i++)
+    for (size_t i = 0; i != _threadNums; i++)
     {
         _threadsArr.push_back(std::thread(&ThreadPool::doTask, this));
     }

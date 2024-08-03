@@ -4,18 +4,17 @@
 #include "Acceptor.h"
 #include "EventLoop.h"
 
-class TcpSever
+
+class TcpServer
 {
-
-    using TcpConnectionCallback
-        = std::function<void(const std::shared_ptr<TcpConnection>&)>;
-
+using TcpConnectionCallback
+    = std::function<void(const std::shared_ptr<TcpConnection>&)>;
 private:
     Acceptor _acceptor;
     EventLoop _evtLoop;
 
 public:
-    TcpSever(const std::string& ip, unsigned short port);
+    TcpServer(const std::string& ip, unsigned short port);
 
     void start();
     void stop();

@@ -16,7 +16,7 @@ void TaskQueue::push(ElemType &&task)
         _notFull.wait(_lock);
     }
     
-    _que.push(task);
+    _que.push(std::move(task));
     _notEmpty.notify_one();
 }
 
@@ -34,6 +34,7 @@ ElemType TaskQueue::pop()
         auto res = _que.front();
         _que.pop();
         _notFull.notify_one();
+        return res;
     }
     else
     {

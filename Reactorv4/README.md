@@ -85,10 +85,15 @@ EventLoop类：
 2. std::vector<Functors> _pendings;     存放任务：TcpConnection中的msg和send
 3. std::mutex _mutex;                   多线程使用的锁
 
-4. int createEventFd();             获取eventfd套接字
-5. void handleRead();               线程进入阻塞状态，等待唤醒
-6. void wakeup();                   唤醒阻塞状态线程
-7. void doPengdingFunction();       执行任务
-8. void runInLoop(Functors&& cb);   存放任务，使用wakeup唤醒线程执行任务
+4. EventLoop(Acceptor& acp);        将_evtFd添加到红黑树上监听
+5. int createEventFd();             获取eventfd套接字
+6. void handleRead();               线程进入阻塞状态，等待唤醒
+7. void wakeup();                   唤醒阻塞状态线程
+8. void doPengdingFunction();       执行任务
+9. void runInLoop(Functors&& cb);   存放任务，使用wakeup唤醒线程执行任务
 
 TcpConnection类：
+1. EventLoop* _evtLoop; 
+
+2. explicit TcpConnection(int fd, EventLoop* evtLp);    修改构造函数
+3. void sendInLoop(const string& msg);

@@ -1,21 +1,21 @@
 #include "TcpServer.h"
 
-TcpSever::TcpSever(const std::string& ip, unsigned short port)
+TcpServer::TcpServer(const std::string& ip, unsigned short port)
 :_acceptor(ip, port), _evtLoop(_acceptor)
 {}
 
-void TcpSever::start()
+void TcpServer::start()
 {
     _acceptor.ready();
     _evtLoop.loop();
 }
 
-void TcpSever::stop()
+void TcpServer::stop()
 {
     _evtLoop.unloop();
 }
 
-void TcpSever::setAllCallback(TcpConnectionCallback&& cb1
+void TcpServer::setAllCallback(TcpConnectionCallback&& cb1
                              , TcpConnectionCallback&& cb2
                              , TcpConnectionCallback&& cb3)
 {

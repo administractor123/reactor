@@ -9,6 +9,7 @@ EventLoop::EventLoop(Acceptor& acc)
 {
     int listen = acc.getFd();
     addEpollReadFd(listen);
+    addEpollReadFd(_evtFd);
 }
 
 EventLoop::~EventLoop()
@@ -61,9 +62,23 @@ void EventLoop::waitEpollFd()
             int fd = _evtList[idx].data.fd;
             int listen = _acceptor.getFd();
 
+            //test
+            std::cout<< pthread_self() <<std::endl;
+            std::cout<< "fd: " << fd <<std::endl;
+            std::cout<< "_evtFd: " << _evtFd <<std::endl;
+
             if(fd == listen)
             {
                 handleNewConnection();
+            }
+            else if(fd == _evtFd)
+            {
+
+                //test;
+                std::cout<< "1: " << pthread_self() <<std::endl;
+
+                handleRead();
+                doPengdingFunction();
             }
             else
             {
@@ -180,7 +195,7 @@ int EventLoop::createEventFd()
     if(fd < 0)
     {
         perror("eventfd in EventLoop::createEventFd()");
-        return;
+        return -1;
     }
 
     return fd;
@@ -188,8 +203,13 @@ int EventLoop::createEventFd()
 
 void EventLoop::handleRead()
 {
+
+    std::cout<< "123" <<std::endl;
     uint64_t one = 1;
     ssize_t ret = read(_evtFd, &one, sizeof(uint64_t));
+
+    std::cout<< "read: " << pthread_self() <<std::endl;
+
     if(ret != sizeof(uint64_t))
     {
         perror("read in EventLoop::handleRead()");
@@ -201,6 +221,9 @@ void EventLoop::wakeup()
 {
     uint64_t one = 1;
     ssize_t ret = write(_evtFd, &one, sizeof(uint64_t));
+
+    std::cout<<"write: " << pthread_self() <<std::endl;
+
     if(ret != sizeof(uint64_t))
     {
         perror("write in EventLoop::handleRead()");

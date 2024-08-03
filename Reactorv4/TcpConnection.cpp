@@ -23,6 +23,9 @@ std::string TcpConnection::receive()
 
 void TcpConnection::send(const std::string& msg) 
 {
+    //test
+    std::cout<< "start send" <<std::endl;
+
     _sockIO.writen(msg.c_str(), msg.size());
 }
 
